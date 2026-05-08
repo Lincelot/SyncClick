@@ -5,9 +5,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 1. 取得所有分頁
   const tabs = await chrome.tabs.query({});
-  
+
   // 2. 讀取之前的狀態 (開關、發送源、目標清單)
-  const data = await chrome.storage.local.get(['enabled', 'sourceTabId', 'targetTabIds']);
+  const data = await chrome.storage.session.get(['enabled', 'sourceTabId', 'targetTabIds']);
 
   // 初始化開關狀態
   document.getElementById('masterSwitch').checked = data.enabled || false;
@@ -26,17 +26,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 事件監聽：當設定改變時自動儲存
 document.addEventListener('change', async (e) => {
   if (e.target.id === 'masterSwitch') {
-    console.log("e.target.id : ",e.target.id);
-    await chrome.storage.local.set({ enabled: e.target.checked });
+    await chrome.storage.session.set({ enabled: e.target.checked });
+    console.log("e.target.id : ", e.target.id);
+    if (e.target.checked) {
+      console.log("e.target.checked is true : ", e);
+      const sessionData = await chrome.storage.session.get(["sourceTabId", "targetTabIds"]);
+      const sourceTabId = sessionData.sourceTabId;
+      const targetTabIds = sessionData.targetTabIds || [];
+
+      if (sourceTabId) {
+        chrome.tabs.sendMessage(sourceTabId, { action: "START_KEYBOARD_BROADCAST" });
+      }
+      for (const tabId of targetTabIds) {
+        chrome.tabs.sendMessage(tabId, { action: "START_MESSAGE_RECEIVER" });
+      }
+    } else {
+      console.log("e.target.checked is false : ", e);
+      const tabs = await chrome.tabs.query({});
+      for (const tab of tabs) {
+        chrome.tabs.sendMessage(tab.id, { action: "STOP_SYNC" })
+      }
+    }
   } else if (e.target.name === 'sourceGroup') {
-    console.log("e.target.name with sourceGroup : ",e.target.name);
-    await chrome.storage.local.set({ sourceTabId: parseInt(e.target.value) });
+    console.log("e.target.name with sourceGroup : ", e.target.name);
+    await chrome.storage.session.set({ sourceTabId: parseInt(e.target.value) });
   } else if (e.target.name === 'targetGroup') {
-    console.log("e.target.name with targetGroup : ",e.target.name);
+    console.log("e.target.name with targetGroup : ", e.target.name);
     // 收集所有被勾選的目標
     const checked = Array.from(document.querySelectorAll('input[name="targetGroup"]:checked'))
-                         .map(el => parseInt(el.value));
-    await chrome.storage.local.set({ targetTabIds: checked });
+      .map(el => parseInt(el.value));
+    await chrome.storage.session.set({ targetTabIds: checked });
   }
 });
 

@@ -1,16 +1,21 @@
 // content.js
 console.log("content onStart");
 
+const ALLOWED_CODES = new Set([
+    'Digit5',     // 鍵盤上方的 5
+    'ControlLeft' // 左Ctrl
+]);
+
 const channel = new BroadcastChannel('SyncClick_Channel');
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("onMessage : ", request)
     switch (request.action) {
         case "START_KEYBOARD_BROADCAST":
-            addClickListener()
+            addClickListener();
             break;
         case "START_MESSAGE_RECEIVER":
-            addMessageEventListener()
+            addMessageEventListener();
             break;
         case "STOP_SYNC":
             removeClickListener();
@@ -19,11 +24,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-async function onKeyboardListener(event) {
+function onKeyboardListener(event) {
     console.log("Keybore event : ", event);
     // 符合你的過濾條件 (例如：Ctrl+Shift+X)
-    if (event.key.toLowerCase() === '5'||event.key === 'Control') {
-        event.preventDefault();
+    if (ALLOWED_CODES.has(event.code)) {
         console.log("我是發送源，正在廣播指令...");
 
         // 廣播給所有分頁
@@ -43,28 +47,6 @@ async function onKeyboardListener(event) {
     }
 }
 
-async function onKeyupListener(event) {
-    // 符合你的過濾條件 (例如：Ctrl+Shift+X)
-    if (event.key.toLowerCase() === '5') {
-        event.preventDefault();
-        console.log("我是發送源，正在廣播指令...");
-
-        channel.postMessage(JSON.stringify({
-            "type": 'keyup',
-            "key": event.key,
-            "keyCode": event.keyCode,
-            "which": event.which,
-            "code": event.code,
-            "location": event.location,
-            "altKey": event.altKey,
-            "ctrlKey": event.ctrlKey,
-            "metaKey": event.metaKey,
-            "shiftKey": event.shiftKey,
-            "repeat": false
-        }));
-    }
-}
-
 // 發送端邏輯：監聽鍵盤
 function addClickListener() {
     document.addEventListener('keydown', onKeyboardListener, true);
@@ -76,7 +58,7 @@ function removeClickListener() {
     document.removeEventListener('keyup', onKeyboardListener, true);
 }
 
-async function onEventListener(event) {
+function onEventListener(event) {
     console.log("收到指令，我是目標分頁，執行動作！");
 
     var data = JSON.parse(event.data);

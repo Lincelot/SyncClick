@@ -2,8 +2,28 @@
 console.log("content onStart");
 
 const ALLOWED_CODES = new Set([
+    'Digit1',     // 鍵盤上方的 1
+    'Digit2',     // 鍵盤上方的 2
+    'Digit3',     // 鍵盤上方的 3
+    'Digit4',     // 鍵盤上方的 4
     'Digit5',     // 鍵盤上方的 5
-    'ControlLeft' // 左Ctrl
+    'Digit6',     // 鍵盤上方的 6
+    'Digit7',     // 鍵盤上方的 7
+    'Digit8',     // 鍵盤上方的 8
+    'Digit9',     // 鍵盤上方的 9
+    'Digit0',     // 鍵盤上方的 0
+    'F1',     // 鍵盤上方的 F1
+    'F2',     // 鍵盤上方的 F2
+    'F3',     // 鍵盤上方的 F3
+    'F4',     // 鍵盤上方的 F4
+    'F5',     // 鍵盤上方的 F5
+    'F6',     // 鍵盤上方的 F6
+    'F7',     // 鍵盤上方的 F7
+    'F8',     // 鍵盤上方的 F8
+    'ControlLeft', // 左Ctrl
+    'ShiftLeft', // 左Shift
+    'AltLeft', // 左Alt
+    'KeyZ' // z
 ]);
 
 const channel = new BroadcastChannel('SyncClick_Channel');
@@ -13,13 +33,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case "START_KEYBOARD_BROADCAST":
             addClickListener();
+            sendResponse({ status: "success" });
             break;
         case "START_MESSAGE_RECEIVER":
             addMessageEventListener();
+            sendResponse({ status: "success" });
             break;
         case "STOP_SYNC":
             removeClickListener();
             removeMessageEventListener();
+            sendResponse({ status: "success" });
             break;
     }
 });

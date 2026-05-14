@@ -35,16 +35,26 @@ document.addEventListener('change', async (e) => {
       const targetTabIds = sessionData.targetTabIds || [];
 
       if (sourceTabId) {
-        chrome.tabs.sendMessage(sourceTabId, { action: "START_KEYBOARD_BROADCAST" });
+        chrome.tabs.sendMessage(sourceTabId, { action: "START_KEYBOARD_BROADCAST" }, response => {
+          console.log("onStartKeybardBroadcast : " + response.status);
+        });
       }
       for (const tabId of targetTabIds) {
-        chrome.tabs.sendMessage(tabId, { action: "START_MESSAGE_RECEIVER" });
+        chrome.tabs.sendMessage(tabId, { action: "START_MESSAGE_RECEIVER" }, response => {
+          console.log("onStartMessageReceiver : " + response.status);
+        });
       }
     } else {
       console.log("e.target.checked is false : ", e);
       const tabs = await chrome.tabs.query({});
       for (const tab of tabs) {
-        chrome.tabs.sendMessage(tab.id, { action: "STOP_SYNC" })
+        chrome.tabs.sendMessage(tab.id, { action: "STOP_SYNC" }, response => {
+          if (chrome.runtime.lastError){
+            console.log("onStopSync : fail - " + chrome.runtime.lastError.message);
+          } else{
+            console.log("onStopSync : " + response.status);
+          }
+        })
       }
     }
   } else if (e.target.name === 'sourceGroup') {

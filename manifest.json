@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SyncClick",
   "version": "0.0.1",
-  "permissions": ["tabs", "storage","activeTab", "scripting"],
+  "permissions": ["tabs", "storage","activeTab"],
   "action": {
     "default_popup": "popup.html" 
   },
